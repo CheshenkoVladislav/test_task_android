@@ -7,4 +7,6 @@ public class Constants {
     public static final int REQUEST_PERMISSION_CAMERA = 1;
     public static final int REQUEST_READ_WRITE_STORAGE = 2;
 
+    public static final String PRESENTER_KEY = "Cache";
+
 }

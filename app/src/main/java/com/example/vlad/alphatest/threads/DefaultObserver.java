@@ -1,4 +1,4 @@
-package com.example.vlad.alphatest.interfaceses;
+package com.example.vlad.alphatest.threads;
 
 import io.reactivex.observers.DisposableObserver;
 

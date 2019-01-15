@@ -1,14 +1,13 @@
 package com.example.vlad.alphatest.view.activity;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
@@ -20,7 +19,6 @@ import com.example.vlad.alphatest.interfaceses.view.AGalleryMvpView;
 import com.example.vlad.alphatest.support.Constants;
 import com.example.vlad.alphatest.view.adapter.GalleryAdapter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -28,10 +26,11 @@ import butterknife.OnClick;
 import timber.log.Timber;
 
 public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implements AGalleryMvpView,
-        OnImageClickListener{
+        OnImageClickListener {
 
     private GalleryAdapter adapter;
-    private AlertDialog progressDialog;
+    private AlertDialog alertDialog;
+    private AlertDialog errorDialog;
 
     @BindView(R.id.parent_view)
     ViewGroup parentView;
@@ -49,7 +48,7 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         setContentView(R.layout.activity_gallery);
         super.onCreate(savedInstanceState);
-        presenter.init();
+        presenter.init(savedInstanceState, getIntent());
     }
 
     @Override
@@ -66,12 +65,12 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
     }
 
     @Override
-    public void initPhotos(List<Image> images) {
-        adapter.replaceData(images);
+    public void replaceImageList(List<Image> images) {
     }
 
     @Override
     public void initRecyclerView(List<Image> imageList) {
+        Timber.d("INIT RECYCLER VIEW, SIZE: = %s", imageList.size());
         adapter = new GalleryAdapter(imageList, this);
         recyclerView.setAdapter(adapter);
     }
@@ -99,30 +98,62 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
 
     @Override
     public void togglePhotosClickable(boolean clickable) {
-        adapter.setClickable(clickable);
+        if (adapter != null)
+            adapter.setClickable(clickable);
     }
 
     @Override
-    public void showProgressDialog() {
-       progressDialog = new AlertDialog.Builder(this).setView(R.layout.progress_dialog_layout)
+    public void showProgressAlertDialog() {
+        alertDialog = new AlertDialog.Builder(this).setView(R.layout.progress_dialog_layout)
                 .setTitle("Loading...")
                 .setCancelable(false)
+                .setOnDismissListener((DialogInterface.OnDismissListener) presenter)
                 .create();
-        progressDialog.show();
+        alertDialog.show();
     }
 
     @Override
-    public void closeProgressDialog() {
-        if (progressDialog != null)
-            progressDialog.dismiss();
+    public void showConnectionErrorAlertDialog() {
+        alertDialog = new AlertDialog.Builder(this)
+                .setTitle("Ошибка сети")
+                .setMessage("Проверьте подключение")
+                .setPositiveButton("Обновить", (dialog, which) -> presenter.requestToUpdate())
+                .setOnDismissListener((DialogInterface.OnDismissListener) presenter)
+                .setCancelable(false)
+                .create();
+        alertDialog.show();
+    }
+
+    @Override
+    public void showImageUploadErrorAlertDialog() {
+        alertDialog = new AlertDialog.Builder(this)
+                .setTitle("Ошибка загрузки")
+                .setMessage("При загрузке фото произошла ошибка")
+                .setPositiveButton("загрузить снова", (dialog, which) -> presenter.requestToUploadAgain())
+                .setNegativeButton("Отменить", (dialog, which) -> presenter.requestToCancelUpload())
+                .setOnDismissListener((DialogInterface.OnDismissListener) presenter)
+                .setOnCancelListener((DialogInterface.OnCancelListener) presenter)
+                .create();
+        alertDialog.show();
+    }
+
+    @Override
+    public void dismissAlertDialog() {
+        if (alertDialog != null) {
+            alertDialog.dismiss();
+        }
+    }
+
+    @Override
+    public void clearAlertDialogListeners() {
+        if (alertDialog != null) {
+            alertDialog.setOnCancelListener(null);
+            alertDialog.setOnDismissListener(null);
+        }
     }
 
     @Override
     public void setListeners() {
-    }
-
-    @Override
-    public void setProgress(long progress) {
 
     }
 

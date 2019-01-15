@@ -19,6 +19,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import timber.log.Timber;
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PhotoViewHolder> {
 
@@ -29,6 +30,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PhotoVie
     public GalleryAdapter(List<Image> urls, OnImageClickListener listener) {
         this.images = urls;
         this.listener = listener;
+        Timber.d("Adapter inited, size: = %s", images.size());
     }
 
     @NonNull
@@ -48,18 +50,10 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PhotoVie
         return images.size();
     }
 
-    public void replaceData(List<Image> images) {
-        this.images = images;
-        notifyDataSetChanged();
-    }
-
     public void addPhoto(Image image) {
         images.add(image);
-        notifyDataSetChanged();
-    }
-
-    public void addData(List<Image> images) {
-        this.images.addAll(images);
+        notifyItemInserted(images.size());
+        Timber.d("Add image: size = %s", images.size());
     }
 
     public void setClickable(boolean clickable) {
@@ -67,8 +61,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PhotoVie
     }
 
     class PhotoViewHolder extends RecyclerView.ViewHolder {
-
-        private Image model;
 
         @BindView(R.id.image)
         ImageView image;
@@ -89,7 +81,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PhotoVie
         }
 
         private void bindHolder(Image model) {
-            this.model = model;
             progressBar.setVisibility(View.VISIBLE);
             Picasso.get().load(model.getUrl())
                     .resize(768, 1024)

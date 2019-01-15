@@ -18,7 +18,6 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:screenOrientation="portrait"
             android:name=".view.activity.GalleryActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

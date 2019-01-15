@@ -1,33 +1,57 @@
 package com.example.vlad.alphatest.model;
 
-import com.example.vlad.alphatest.data.RxResult;
-import com.example.vlad.alphatest.interfaceses.threads.PostExecutionThread;
-import com.example.vlad.alphatest.interfaceses.threads.ThreadExecutor;
+import com.example.vlad.alphatest.threads.SubscriberManager;
 
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
-import io.reactivex.schedulers.Schedulers;
+abstract class BaseModel extends SubscriberManager {
 
-abstract class BaseModel {
-    private ThreadExecutor threadExecutor;
-    private PostExecutionThread postExecutionThread;
-    private int timeoutSec = 20;
+    private static final String NULL_OBSERVABLE_ERROR = "Observable is null";
 
+    private Scheduler executeScheduler;
+    private int timeoutSec = 4;
 
-    BaseModel(ThreadExecutor threadExecutor, PostExecutionThread postExecutionThread) {
-        this.threadExecutor = threadExecutor;
-        this.postExecutionThread = postExecutionThread;
+    BaseModel(Scheduler executeScheduler) {
+        this.executeScheduler = executeScheduler;
     }
 
-    <R extends RxResult> Observable<R> buildObservable(ObservableOnSubscribe<R> emitter) {
-        return Observable.create(emitter).subscribeOn(postExecutionThread.getScheduler()).timeout(timeoutSec, TimeUnit.SECONDS);
+    <R> Observable<R> buildObservable(Observable<R> observable) {
+        if (observable != null)
+            return observable.timeout(timeoutSec, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread());
+        else
+            return createObservableError(new NullPointerException(NULL_OBSERVABLE_ERROR));
+    }
+
+    <R> Observable<R> buildObservable(ObservableOnSubscribe<R> emitter) {
+        if (emitter != null)
+            return Observable.create(emitter).timeout(timeoutSec, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread());
+        else
+            return createObservableError(new NullPointerException(NULL_OBSERVABLE_ERROR));
+
+    }
+
+    <R> Observable<R> buildAsyncObservable(Observable<R> observable) {
+        if (observable != null)
+            return observable.subscribeOn(executeScheduler).timeout(timeoutSec, TimeUnit.SECONDS)
+                    .observeOn(AndroidSchedulers.mainThread());
+        else
+            return createObservableError(new NullPointerException(NULL_OBSERVABLE_ERROR));
     }
 
     <R> Observable<R> buildAsyncObservable(ObservableOnSubscribe<R> emitter) {
-        return Observable.create(emitter).subscribeOn(Schedulers.from(threadExecutor))
-                .observeOn(postExecutionThread.getScheduler()).timeout(timeoutSec, TimeUnit.SECONDS);
+        if (emitter != null)
+            return Observable.create(emitter).subscribeOn(executeScheduler).timeout(timeoutSec, TimeUnit.SECONDS)
+                    .observeOn(AndroidSchedulers.mainThread());
+        else
+            return createObservableError(new NullPointerException(NULL_OBSERVABLE_ERROR));
+    }
+
+    private <R> Observable<R> createObservableError(Throwable throwable) {
+        return Observable.error(throwable);
     }
 }

@@ -1,11 +1,13 @@
 package com.example.vlad.alphatest.presenter;
 
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.example.vlad.alphatest.data.Image;
 import com.example.vlad.alphatest.interfaceses.model.AGalleryMvpModel;
 import com.example.vlad.alphatest.interfaceses.presenter.AGalleryMvpPresenter;
 import com.example.vlad.alphatest.interfaceses.view.AGalleryMvpView;
@@ -14,34 +16,39 @@ import com.example.vlad.alphatest.support.PermissionHelper;
 import com.example.vlad.alphatest.support.PhotoUtils;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
+import io.reactivex.functions.Action;
 import timber.log.Timber;
 
 import static com.example.vlad.alphatest.support.Constants.CAMERA_REQUEST_CODE;
 
 public class AGalleryPresenter extends BasePresenter<AGalleryMvpView, AGalleryMvpModel>
-        implements AGalleryMvpPresenter {
+        implements AGalleryMvpPresenter, DialogInterface.OnDismissListener, DialogInterface.OnCancelListener {
 
     private boolean inited;
+    private boolean loading;
+    private long loadingProgress;
     private File photoFile;
-    private Drawable drawable;
+
+    private int currentError;
+    private static final int NO_ERROR_STATUS = 0;
+    private static final int CONNECTION_ERROR = 1;
+    private static final int IMAGE_UPLOAD_ERROR = 2;
 
     public AGalleryPresenter(AGalleryMvpView view, AGalleryMvpModel model) {
         super(view, model);
     }
 
     @Override
-    public boolean init() {
-        super.init();
+    public boolean init(Bundle savedInstanceState, Intent intent) {
+        super.init(savedInstanceState, intent);
         Timber.d("Gallery init");
-        if (view != null && model != null) {
-            view.setListeners();
-            view.initRecyclerView(new ArrayList<>());
+        if (this.view != null && model != null) {
             initData();
-            return inited = true;
+            return inited;
         }
-        return inited = false;
+        return false;
     }
 
     @Override
@@ -51,22 +58,32 @@ public class AGalleryPresenter extends BasePresenter<AGalleryMvpView, AGalleryMv
             view.togglePhotosClickable(true);
             view.toggleBtn(true);
         }
-        if (model != null)
-            model.resumeUpload();
     }
 
     @Override
-    public void stop() {
-        super.stop();
-        if (model != null)
-            model.pauseUpload();
+    public void dettachView() {
+        clearAlertDialogListeners();
+        dismissAlertDialog();
+        super.dettachView();
     }
 
     @Override
-    public void destroy() {
-        super.destroy();
-        if (model != null)
-            model.cancelUpload();
+    public void requestToUpdate() {
+        currentError = NO_ERROR_STATUS;
+        initData();
+    }
+
+    @Override
+    public void requestToUploadAgain() {
+        currentError = NO_ERROR_STATUS;
+        dismissAlertDialog();
+        uploadPhoto();
+    }
+
+    @Override
+    public void requestToCancelUpload() {
+        currentError = NO_ERROR_STATUS;
+        dismissAlertDialog();
     }
 
     @Override
@@ -104,29 +121,7 @@ public class AGalleryPresenter extends BasePresenter<AGalleryMvpView, AGalleryMv
     public void activityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == CAMERA_REQUEST_CODE) {
             Timber.d("Response from camera intent: RESULT CODE = " + resultCode + "\nDATA = " + data);
-            if (model != null) {
-                disposables.add(model.uploadPhoto(photoFile)
-                        .doOnSubscribe(disposable -> showProgressDialog())
-                        .doOnComplete(this::closeProgressDialog)
-                        .subscribe(
-                                imageUrlResult -> {
-                                    if (view != null) {
-                                        if (imageUrlResult.getResult() == null)
-                                            view.setUploadProgress(imageUrlResult.getProgress());
-                                        else {
-                                            view.addNewPhoto(imageUrlResult.getResult());
-                                            view.toggleBtn(true);
-                                        }
-                                    }
-                                },
-                                error -> {
-                                    //handle error
-                                    if (view != null) {
-                                        view.closeProgressDialog();
-                                        view.toggleBtn(true);
-                                    }
-                                }));
-            }
+            uploadPhoto();
             //getImage from data
         }
 
@@ -137,33 +132,148 @@ public class AGalleryPresenter extends BasePresenter<AGalleryMvpView, AGalleryMv
         boolean permissionGranted = PermissionHelper.checkGranted(grantResults);
         switch (requestCode) {
             case Constants.REQUEST_PERMISSION_CAMERA:
-                if (permissionGranted && view != null) {
-                    createTempFile();
-                    Timber.d("PERMISSION GRANTED");
-                    view.sendCameraIntent(createCameraIntent());
-                } else {
-                    Timber.d("onRequestPermissionsResult: permission denied");
+                if (view != null) {
+                    if (permissionGranted) {
+                        createTempFile();
+                        Timber.d("PERMISSION GRANTED");
+                        view.sendCameraIntent(createCameraIntent());
+                    } else {
+                        view.toggleBtn(true);
+                        Timber.d("onRequestPermissionsResult: permission denied");
+                    }
+                    break;
                 }
-                break;
+        }
+    }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        loading = false;
+        currentError = NO_ERROR_STATUS;
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        if (currentError != 0) {
+            showErrorDialog();
         }
     }
 
     private void initData() {
-        disposables.add(model.downloadImages().subscribe(imageListResult -> {
-                    if (view != null)
-                        view.initPhotos(imageListResult.getResult());
-                },
-                Throwable::printStackTrace));
+        if (!inited && currentError == NO_ERROR_STATUS)
+            disposables.add(model.getImageList()
+                    .doOnSubscribe(disposable -> showProgressDialog())
+                    .doOnComplete(() -> {
+                        inited = true;
+                        loading = false;
+                        currentError = NO_ERROR_STATUS;
+                        dismissAlertDialog();
+                    })
+                    .subscribe(imageList -> {
+                                Timber.d("IMAGE LIST GET: ");
+                                initRecyclerView(imageList);
+                            },
+                            error -> {
+                                Timber.d(error);
+                                loading = false;
+                                currentError = CONNECTION_ERROR;
+                                dismissAlertDialog();
+                            }));
+        else if (model != null && view != null) {
+            initRecyclerView(model.getCachedImageList());
+            if (model.inPause()) {
+                view.showProgressAlertDialog();
+                model.resumeUpload();
+            } else if (loading) {
+                view.showProgressAlertDialog();
+            } else if (currentError != NO_ERROR_STATUS)
+                showErrorDialog();
+        }
     }
 
-    private void closeProgressDialog() {
+    private void uploadPhoto() {
+        if (model != null && photoFile != null) {
+            disposables.add(model.uploadPhoto(photoFile)
+                    .doOnSubscribe(disposable -> showProgressDialog())
+                    .subscribe(
+                            imageUrlResult -> {
+                                if (imageUrlResult.getResult() == null && view != null) {
+                                    loadingProgress = imageUrlResult.getProgress();
+                                    view.setUploadProgress(imageUrlResult.getProgress());
+                                } else if (model != null) {
+                                    writeReferenceToDB(() -> {
+                                        loading = false;
+                                        if (view != null) {
+                                            currentError = NO_ERROR_STATUS;
+                                            view.dismissAlertDialog();
+                                            view.addNewPhoto(imageUrlResult.getResult());
+                                            view.toggleBtn(true);
+                                        }
+                                    }, imageUrlResult.getResult());
+                                }
+                            },
+                            error -> {
+                                //handle error
+                                Timber.d(error);
+                                loading = false;
+                                if (view != null) {
+                                    currentError = IMAGE_UPLOAD_ERROR;
+                                    view.dismissAlertDialog();
+                                    view.toggleBtn(true);
+                                }
+                            }));
+        }
+    }
+
+    private void writeReferenceToDB(Action action, Image image) {
+        disposables.add(model.writeUrlToDatabase(image)
+                .doOnError(error -> {
+                    loading = false;
+                    currentError = IMAGE_UPLOAD_ERROR;
+                    Timber.d((Throwable) error);
+                    if (view != null) {
+                        view.dismissAlertDialog();
+                        view.toggleBtn(true);
+                    }
+                })
+                .doOnComplete(action)
+                .subscribe());
+    }
+
+
+    private void initRecyclerView(List<Image> imageList) {
         if (view != null)
-            view.closeProgressDialog();
+            view.initRecyclerView(imageList);
+    }
+
+    private void dismissAlertDialog() {
+        if (view != null)
+            view.dismissAlertDialog();
+    }
+
+    private void clearAlertDialogListeners() {
+        if (view != null)
+            view.clearAlertDialogListeners();
     }
 
     private void showProgressDialog() {
+        loading = true;
         if (view != null)
-            view.showProgressDialog();
+            view.showProgressAlertDialog();
+    }
+
+    private void showErrorDialog() {
+        if (view != null)
+            switch (currentError) {
+                case CONNECTION_ERROR:
+                    loading = false;
+                    view.showConnectionErrorAlertDialog();
+                    break;
+                case IMAGE_UPLOAD_ERROR:
+                    loading = false;
+                    view.showImageUploadErrorAlertDialog();
+                    break;
+            }
     }
 
     private void createTempFile() {

@@ -10,4 +10,7 @@ public interface AGalleryMvpPresenter extends MvpPresenter {
     void requestToOpenPhotoViewer(Drawable imageDrawable);
     void permissionResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults);
     void activityResult(int requestCode, int resultCode, @Nullable Intent data);
+    void requestToUpdate();
+    void requestToUploadAgain();
+    void requestToCancelUpload();
 }

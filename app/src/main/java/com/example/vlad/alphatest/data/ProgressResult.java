@@ -4,12 +4,12 @@ import android.support.annotation.NonNull;
 
 import java.util.Objects;
 
-public class RxResult<T> {
+public class ProgressResult<T> {
     private T result;
     private long progress;
     private String errorMessage;
 
-    public RxResult(T result, long progress) {
+    public ProgressResult(T result, long progress) {
         this.result = result;
         this.progress = progress;
     }
@@ -41,7 +41,7 @@ public class RxResult<T> {
     @NonNull
     @Override
     public String toString() {
-        return "RxResult{" +
+        return "ProgressResult{" +
                 "result=" + result +
                 ", progress=" + progress +
                 ", errorMessage='" + errorMessage + '\'' +
@@ -52,7 +52,7 @@ public class RxResult<T> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RxResult<?> result1 = (RxResult<?>) o;
+        ProgressResult<?> result1 = (ProgressResult<?>) o;
         return progress == result1.progress &&
                 Objects.equals(result, result1.result) &&
                 Objects.equals(errorMessage, result1.errorMessage);

@@ -3,15 +3,15 @@ package com.example.vlad.alphatest.di.modules;
 import android.content.Context;
 
 import com.example.vlad.alphatest.app.Application;
-import com.example.vlad.alphatest.interfaceses.threads.PostExecutionThread;
-import com.example.vlad.alphatest.interfaceses.threads.ThreadExecutor;
 import com.example.vlad.alphatest.threads.JobExecutor;
-import com.example.vlad.alphatest.threads.UIThread;
 
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
+import retrofit2.Retrofit;
 
 @Module
 public class AndroidModule {
@@ -24,13 +24,7 @@ public class AndroidModule {
 
     @Provides
     @Singleton
-    ThreadExecutor provideExecutor(JobExecutor jobExecutor) {
-        return jobExecutor;
-    }
-
-    @Provides
-    @Singleton
-    PostExecutionThread providePostExecutionThread(UIThread uiThread) {
-        return uiThread;
+    Scheduler provideExecutor(JobExecutor jobExecutor) {
+        return Schedulers.from(jobExecutor);
     }
 }

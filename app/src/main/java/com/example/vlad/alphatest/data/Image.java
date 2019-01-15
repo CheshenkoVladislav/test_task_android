@@ -2,11 +2,14 @@ package com.example.vlad.alphatest.data;
 
 import android.support.annotation.NonNull;
 
+import org.parceler.Parcel;
+
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Image {
-    private String id;
-    private String url;
+public class Image implements Serializable {
+    String id;
+    String url;
 
     public Image() {
     }
