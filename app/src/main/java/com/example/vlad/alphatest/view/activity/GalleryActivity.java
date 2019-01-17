@@ -17,8 +17,11 @@ import com.example.vlad.alphatest.interfaceses.listeners.OnImageClickListener;
 import com.example.vlad.alphatest.interfaceses.presenter.AGalleryMvpPresenter;
 import com.example.vlad.alphatest.interfaceses.view.AGalleryMvpView;
 import com.example.vlad.alphatest.support.Constants;
+import com.example.vlad.alphatest.support.IntentUtils;
+import com.example.vlad.alphatest.support.PermissionHelper;
 import com.example.vlad.alphatest.view.adapter.GalleryAdapter;
 
+import java.io.File;
 import java.util.List;
 
 import butterknife.BindView;
@@ -40,8 +43,8 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
     Button getPhoto;
 
     @OnClick(R.id.get_photo_btn)
-    public void onGetPhotoClick() {
-        presenter.requestToAddPhoto();
+    public void onTakePhotoClick() {
+        presenter.requestToCheckPermission();
     }
 
     @Override
@@ -61,7 +64,8 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        presenter.permissionResult(requestCode, permissions, grantResults);
+        boolean permissionGranted = PermissionHelper.checkGranted(grantResults);
+        presenter.permissionResult(requestCode, permissionGranted);
     }
 
     @Override
@@ -73,6 +77,25 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
         Timber.d("INIT RECYCLER VIEW, SIZE: = %s", imageList.size());
         adapter = new GalleryAdapter(imageList, this);
         recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void checkCameraPermissions() {
+        presenter.requestToAddPhoto(PermissionHelper.mayRequestCamera(this));
+    }
+
+    @Override
+    public void startCamera(File file) {
+        Intent cameraIntent = IntentUtils.createCameraIntent(this, file);
+        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(cameraIntent, Constants.CAMERA_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void startGallery(File file) {
+        Intent galleryIntent = IntentUtils.createGalleryIntent(this, file);
+        startActivity(galleryIntent);
     }
 
     @Override
@@ -117,7 +140,7 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
         alertDialog = new AlertDialog.Builder(this)
                 .setTitle("Ошибка сети")
                 .setMessage("Проверьте подключение")
-                .setPositiveButton("Обновить", (dialog, which) -> presenter.requestToUpdate())
+                .setPositiveButton("Обновить", (dialog, which) -> presenter.requestToReinit())
                 .setOnDismissListener((DialogInterface.OnDismissListener) presenter)
                 .setCancelable(false)
                 .create();
@@ -155,17 +178,5 @@ public class GalleryActivity extends BaseActivity<AGalleryMvpPresenter> implemen
     @Override
     public void setListeners() {
 
-    }
-
-    @Override
-    public void sendCameraIntent(Intent cameraIntent) {
-        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(cameraIntent, Constants.CAMERA_REQUEST_CODE);
-        }
-    }
-
-    @Override
-    public void sendGalleryIntent(Intent intent) {
-        startActivity(intent);
     }
 }

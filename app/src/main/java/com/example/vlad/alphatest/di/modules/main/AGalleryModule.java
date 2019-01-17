@@ -1,5 +1,7 @@
 package com.example.vlad.alphatest.di.modules.main;
 
+import android.content.Context;
+
 import com.example.vlad.alphatest.interfaceses.model.AGalleryMvpModel;
 import com.example.vlad.alphatest.interfaceses.presenter.AGalleryMvpPresenter;
 import com.example.vlad.alphatest.interfaceses.view.AGalleryMvpView;
@@ -12,7 +14,7 @@ import dagger.Provides;
 public class AGalleryModule {
 
     @Provides
-    AGalleryMvpPresenter provideAGalleryPresenter(AGalleryMvpView view, AGalleryMvpModel model) {
-        return new AGalleryPresenter(view, model);
+    AGalleryMvpPresenter provideAGalleryPresenter(Context context, AGalleryMvpView view, AGalleryMvpModel model) {
+        return new AGalleryPresenter(context, view, model);
     }
 }

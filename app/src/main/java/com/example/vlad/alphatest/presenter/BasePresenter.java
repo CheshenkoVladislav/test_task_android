@@ -1,5 +1,6 @@
 package com.example.vlad.alphatest.presenter;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -16,17 +17,15 @@ import io.reactivex.disposables.CompositeDisposable;
 import timber.log.Timber;
 
 public abstract class BasePresenter<V extends MvpView, M extends MvpModel> implements MvpPresenter {
-    protected BaseActivity activity;
+    protected Context context;
     protected V view;
     protected M model;
     CompositeDisposable disposables = new CompositeDisposable();
 
-    BasePresenter(V view, M model) {
+    BasePresenter(Context context, V view, M model) {
         this.view = view;
         this.model = model;
-        if (view != null) {
-            initActivity(view);
-        }
+        this.context = context;
     }
 
     @Override
@@ -46,7 +45,6 @@ public abstract class BasePresenter<V extends MvpView, M extends MvpModel> imple
     @Override
     public void attachView(MvpView view) {
         this.view = (V) view;
-        initActivity(this.view);
     }
 
     @Override
@@ -58,13 +56,5 @@ public abstract class BasePresenter<V extends MvpView, M extends MvpModel> imple
     public void destroy() {
         disposables.dispose();
         disposables = new CompositeDisposable();
-    }
-
-    private void initActivity(V view) {
-        if (view instanceof BaseActivity) {
-            activity = (BaseActivity) view;
-        } else if (view instanceof BaseFragment) {
-            activity = (BaseActivity) ((BaseFragment) view).getActivity();
-        }
     }
 }

@@ -100,7 +100,7 @@ public class AGalleryModel extends BaseModel implements AGalleryMvpModel {
     }
 
     @Override
-    public Observable writeUrlToDatabase(Image image) {
+    public Observable<Void> writeUrlToDatabase(Image image) {
         Timber.d("IMAGE UPLOAD TO DATABASE IMAGE URL: %s", image.getUrl());
         return buildObservable(repository.writeNewImageToDB(image).toObservable());
     }

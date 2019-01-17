@@ -21,5 +21,5 @@ public interface AGalleryMvpModel extends MvpModel{
     ArrayList<Image> getCachedImageList();
     Observable <ProgressResult<File>> savePhotoToInternalStorage(Drawable drawable);
     Observable <List<Image>> getImageList();
-    Observable writeUrlToDatabase(Image image);
+    Observable <Void> writeUrlToDatabase(Image image);
 }
