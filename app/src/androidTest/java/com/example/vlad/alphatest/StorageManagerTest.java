@@ -6,16 +6,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
-import android.util.Log;
-
-import com.example.vlad.alphatest.data.Image;
-import com.example.vlad.alphatest.di.component.AppComponent;
-import com.example.vlad.alphatest.di.modules.FirebaseModule;
 import com.example.vlad.alphatest.managers.StorageManager;
-import com.example.vlad.alphatest.repository.GalleryFirebaseRepository;
-import com.example.vlad.alphatest.repository.GalleryRepository;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.storage.FirebaseStorage;
 
 import org.junit.After;
 import org.junit.Assert;
