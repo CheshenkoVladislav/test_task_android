@@ -1,6 +1,6 @@
 package com.example.vlad.alphatest.threads;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.example.vlad.alphatest.data.ProgressResult;
 import io.reactivex.ObservableEmitter;

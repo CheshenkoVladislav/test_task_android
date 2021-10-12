@@ -3,7 +3,7 @@ package com.example.vlad.alphatest.support;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 
 import com.example.vlad.alphatest.view.activity.BaseActivity;

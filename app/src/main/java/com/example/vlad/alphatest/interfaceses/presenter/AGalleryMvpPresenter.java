@@ -2,7 +2,7 @@ package com.example.vlad.alphatest.interfaceses.presenter;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 public interface AGalleryMvpPresenter extends MvpPresenter {
     void requestToAddPhoto(boolean b);

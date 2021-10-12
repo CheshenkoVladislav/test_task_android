@@ -1,6 +1,6 @@
 package com.example.vlad.alphatest;
 
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.util.Log;
 
 import com.example.vlad.alphatest.data.Image;

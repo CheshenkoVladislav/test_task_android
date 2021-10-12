@@ -5,6 +5,7 @@ import com.example.vlad.alphatest.interfaceses.api.GalleryApi;
 import com.example.vlad.alphatest.repository.GalleryFirebaseRepository;
 import com.example.vlad.alphatest.repository.GalleryRepository;
 import com.example.vlad.alphatest.repository.GalleryRestRepository;
+import com.example.vlad.alphatest.threads.JobExecutor;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import dagger.Module;
@@ -15,8 +16,8 @@ public class RepositoryModule {
 
     @CustomAnnotations.FirebaseRepository
     @Provides
-    GalleryRepository provideGalleryRepository(FirebaseStorage firebaseStorage, FirebaseDatabase firebaseDatabase) {
-        return new GalleryFirebaseRepository(firebaseStorage, firebaseDatabase);
+    GalleryRepository provideGalleryRepository(JobExecutor executor, FirebaseStorage firebaseStorage, FirebaseDatabase firebaseDatabase) {
+        return new GalleryFirebaseRepository(executor, firebaseStorage, firebaseDatabase);
     }
 
     @CustomAnnotations.RestRepository

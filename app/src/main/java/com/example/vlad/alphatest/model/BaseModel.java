@@ -14,7 +14,7 @@ abstract class BaseModel extends SubscriberManager {
     private static final String NULL_OBSERVABLE_ERROR = "Observable is null";
 
     private Scheduler executeScheduler;
-    private int timeoutSec = 4;
+    private int timeoutSec = 60;
 
     BaseModel(Scheduler executeScheduler) {
         this.executeScheduler = executeScheduler;

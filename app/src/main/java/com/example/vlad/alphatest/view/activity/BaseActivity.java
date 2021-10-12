@@ -2,13 +2,12 @@ package com.example.vlad.alphatest.view.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.vlad.alphatest.interfaceses.presenter.MvpPresenter;
 import com.example.vlad.alphatest.interfaceses.view.MvpView;
-import com.example.vlad.alphatest.support.Constants;
 
 import javax.inject.Inject;
 

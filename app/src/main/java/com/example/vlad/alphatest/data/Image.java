@@ -1,8 +1,6 @@
 package com.example.vlad.alphatest.data;
 
-import android.support.annotation.NonNull;
-
-import org.parceler.Parcel;
+import androidx.annotation.NonNull;
 
 import java.io.Serializable;
 import java.util.Objects;
